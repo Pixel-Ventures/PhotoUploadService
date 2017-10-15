@@ -1,0 +1,31 @@
+## Library/Dependancies
+bower/
+node_modules/
+typings/
+
+## Capistrano
+Gemfile.lock
+config/config.js
+config/deploy/
+config/deploy.rb
+
+## Build Files/Folders
+.rebooted
+/build/
+/dist/
+/photoshop
+/uploads
+
+## Logs
+log/
+
+## Filetypes
+*.psd
+*.svg
+*.csv
+*.log
+
+## Specific files
+.env
+dump.rdb
+todo.txt

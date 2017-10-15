@@ -1,0 +1,31 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    ".git",
+    "node_modules/",
+    "build"
+  ],
+  "verbose": true,
+  "exec": "node --harmony --inspect build/server/server",
+  "execMap": {
+    "js": "node --harmony"
+  },
+  "args": [
+    "--testArg1"
+  ],
+  "events": {
+    
+  },
+  "watch": [
+    "src/server",
+    "src/config",
+    "src/public"
+  ],
+  "tasks": [
+    "build"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "js json html ts less css"
+}
