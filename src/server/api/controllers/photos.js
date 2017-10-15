@@ -2,10 +2,10 @@
 * @Author: Craig Bojko
 * @Date:   2017-10-14 12:07:46
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-15 02:06:56
+* @Last Modified time: 2017-10-15 21:19:43
 */
 
-import fs from 'fs'
+import mv from 'mv'
 import path from 'path'
 import Logger from '../../modules/Logger.module'
 import MongoDB from '../../modules/MongoDB.module'
@@ -112,7 +112,8 @@ function photoMigrationRoutine (filename, dbDocument) {
 function moveFile (filename, thumbnail = false) {
   const currentFile = thumbnail ? path.join(UPLOADS, 'thumbnails', 'thumb_' + filename) : path.join(UPLOADS, filename)
   const destination = thumbnail ? path.join(UPLOADS_S3, 'thumbnails', 'thumb_' + filename) : path.join(UPLOADS_S3, filename)
-  fs.rename(currentFile, destination, (err) => {
+
+  mv(currentFile, destination, (err) => {
     if (err) {
       this.reject(new Error(err))
     }
