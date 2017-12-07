@@ -2,13 +2,14 @@
 * @Author: Craig Bojko
 * @Date:   2017-02-17 12:11:37
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-14 22:48:06
+* @Last Modified time: 2017-12-07 15:51:22
 */
 
 import Mongoose from 'mongoose'
 import Logger from './Logger.module'
 
 import PhotoModel from './models/photo.dbmodel'
+import PhotoTransactionModel from './models/photoTransaction.dbmodel'
 
 require('dotenv').config()
 
@@ -60,7 +61,8 @@ function setupMongoInterface (modelRequest) {
 
     // Model Export object - essentially one property per table
     models = {
-      photo: PhotoModel(Mongoose)
+      photo: PhotoModel(Mongoose),
+      photoTransactions: PhotoTransactionModel(Mongoose)
     }
   }
   return models[modelRequest]

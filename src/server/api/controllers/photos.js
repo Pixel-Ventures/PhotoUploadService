@@ -1,8 +1,8 @@
 /*
 * @Author: Craig Bojko
-* @Date:   2017-10-14 12:07:46
+* @Date:   2017-12-07 16:50:50
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-15 21:19:43
+* @Last Modified time: 2017-12-07 18:20:43
 */
 
 import mv from 'mv'
@@ -14,6 +14,7 @@ import EMail from '../../modules/Mail.module'
 require('dotenv').config()
 
 const Photos = MongoDB('photo')
+const PhotoTransactions = MongoDB('photoTransactions')
 const UPLOADS = process.env.UPLOAD
 const UPLOADS_S3 = process.env.UPLOADS3
 
@@ -46,25 +47,55 @@ export default class PhotoAPI {
 function handleGetRequest (req, res, next) {
   pullPhotosFromDB().then(photos => {
     let photoPromises = []
+    let photoTransactions = []
+
     for (let i in photos) {
       const filename = photos[i].filename
-      Logger.debug('PHOTO FILENAME TO MIGRATE: ', photos[i].filename)
+      photoTransactions.push({
+        uid: photos[i].uid,
+        filename: photos[i].filename,
+        keyword: photos[i].keyword
+      })
+      Logger.debug('PHOTO FILENAME TO MIGRATE: ', filename)
+
       photoPromises.push(new Promise((resolve, reject) => {
         let createThumbnail = this.root.createThumbnail
         photoMigrationRoutine.apply({createThumbnail, resolve, reject}, [filename, photos[i]])
       }))
     }
+
     Promise.all(photoPromises).then(() => {
       let digest = {
         status: 200,
         photos: uploadedPhotos,
         errors: erroredPhotos
       }
+
       if ((uploadedPhotos && uploadedPhotos.length) || (erroredPhotos && erroredPhotos.length)) {
-        let email = new EMail()
-        email.sendReportMessage(digest)
+        // Add a batch transaction to the DB for logging and to enable reviews
+        PhotoTransactions.create({
+          timestamp: Date.now(),
+          files: photoTransactions
+        }, (err, transaction) => {
+          if (err) {
+            Logger.error(err)
+          } else {
+            Logger.debug('INSERTED TRANSACTION ID: %s', transaction._id)
+            digest.transaction = transaction._id
+            digest.photoTransaction = photoTransactions
+            // Send email to Admin
+            let email = new EMail()
+            email.sendReportMessage(digest)
+          }
+        })
       }
-      res.status(200).json(digest)
+
+      // Return to XHR
+      res.status(200).json({
+        status: 200,
+        photos: uploadedPhotos,
+        errors: erroredPhotos
+      })
     }, (err) => {
       returnErrorToCaller(res, err, 'Problem running photo routine')
     })
@@ -124,6 +155,7 @@ function moveFile (filename, thumbnail = false) {
 function pullPhotosFromDB () {
   return new Promise((resolve, reject) => {
     Photos.find({
+      review: { $exists: false },
       public: true,
       enabled: false
     }).exec(function (err, docs) {

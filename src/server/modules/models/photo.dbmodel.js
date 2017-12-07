@@ -2,7 +2,7 @@
 * @Author: Craig Bojko
 * @Date:   2017-10-14 11:26:17
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-14 12:14:06
+* @Last Modified time: 2017-12-07 19:38:41
 */
 
 import autoIncrement from 'mongoose-auto-increment'
@@ -23,7 +23,8 @@ export default function PhotoModel (Mongoose) {
     size: Number,
     mimetype: String,
     public: Boolean,
-    enabled: Boolean
+    enabled: Boolean,
+    review: { type: Boolean, default: false }
   })
 
   photoSchema.plugin(autoIncrement.plugin, {
