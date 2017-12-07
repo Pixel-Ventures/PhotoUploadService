@@ -46,6 +46,7 @@
     "gulp-rename": "1.2.2",
     "gulp-sourcemaps": "2.6.0",
     "gulp-standard": "8.0.3",
+    "hogan.js": "^3.0.2",
     "http-proxy": "1.16.2",
     "merge-stream": "1.0.1",
     "mongodb": "2.2.26",

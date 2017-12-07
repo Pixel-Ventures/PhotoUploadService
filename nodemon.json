@@ -6,7 +6,7 @@
     "build"
   ],
   "verbose": true,
-  "exec": "node --harmony --inspect build/server/server",
+  "exec": "node --harmony --inspect=127.0.0.1:9220 build/server/server",
   "execMap": {
     "js": "node --harmony"
   },

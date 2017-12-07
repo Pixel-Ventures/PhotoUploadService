@@ -2,14 +2,32 @@
 * @Author: Craig Bojko
 * @Date:   2017-06-01 14:36:54
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-15 01:57:18
+* @Last Modified time: 2017-12-07 16:30:04
 */
 
 import 'colors'
+import fs from 'fs'
+import path from 'path'
 import nodemailer from 'nodemailer'
 import Logger from './Logger.module'
+import Hogan from 'hogan.js'
 
 require('dotenv').config()
+
+function buildEmailContent (data) {
+  let emailWrapperFile = fs.readFileSync(path.join(__dirname, './email/wrapper.html'), 'utf8')
+  let contentHTMLFile = fs.readFileSync(path.join(__dirname, './email/photoDigest.html'), 'utf8')
+
+  let hoganWrapperTemplate = Hogan.compile(emailWrapperFile)
+  let hoganContentTemplate = Hogan.compile(contentHTMLFile)
+
+  let emailContent = hoganContentTemplate.render(data)
+  let email = hoganWrapperTemplate.render({
+    content: emailContent
+  })
+
+  return email
+}
 
 export default class EMail {
   constructor () {
@@ -29,7 +47,7 @@ export default class EMail {
       email = {
         subject: 'PhotoUPLOAD-Service: Migration report',
         targetEmail: 'craig@pixelventures.co.uk',
-        content: JSON.stringify(data, ' ', 2)
+        content: buildEmailContent(data)
       }
       if (email) {
         Logger.info('Sending Contact Email...')
