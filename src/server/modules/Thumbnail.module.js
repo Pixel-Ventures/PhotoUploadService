@@ -2,7 +2,7 @@
 * @Author: Craig Bojko
 * @Date:   2017-10-14 21:03:51
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-15 00:38:19
+* @Last Modified time: 2017-12-14 12:17:46
 */
 
 import path from 'path'
@@ -15,7 +15,7 @@ const DIR = process.env.UPLOAD
 export default class Thumbnail {
   createThumbnail (filename) {
     return thumb({
-      source: path.join(DIR, filename),
+      source: path.join(DIR, 'minified', filename),
       destination: DIR + '/thumbnails/',
       prefix: 'thumb_',
       suffix: '',
@@ -30,6 +30,19 @@ export default class Thumbnail {
       // logger: function(message) {
       //   console.log(message);
       // }
+    })
+  }
+
+  customResize (filename, width) {
+    return thumb({
+      source: path.join(DIR, filename),
+      destination: DIR + '/minified/',
+      prefix: '',
+      suffix: '',
+      digest: false,
+      hashingType: 'sha1',
+      width: width,
+      overwrite: false
     })
   }
 }

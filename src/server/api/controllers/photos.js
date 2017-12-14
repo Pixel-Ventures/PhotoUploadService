@@ -2,7 +2,7 @@
 * @Author: Craig Bojko
 * @Date:   2017-12-07 16:50:50
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-12-07 18:20:43
+* @Last Modified time: 2017-12-14 12:17:46
 */
 
 import mv from 'mv'
@@ -60,7 +60,9 @@ function handleGetRequest (req, res, next) {
 
       photoPromises.push(new Promise((resolve, reject) => {
         let createThumbnail = this.root.createThumbnail
-        photoMigrationRoutine.apply({createThumbnail, resolve, reject}, [filename, photos[i]])
+        let minifyImage = this.root.minifyImage
+        let customResize = this.root.customResize
+        photoMigrationRoutine.apply({createThumbnail, minifyImage, customResize, resolve, reject}, [filename, photos[i]])
       }))
     }
 
@@ -98,43 +100,64 @@ function handleGetRequest (req, res, next) {
       })
     }, (err) => {
       returnErrorToCaller(res, err, 'Problem running photo routine')
+      Logger.error('ERROR in photo migrate routine: ', erroredPhotos)
     })
   }, err => {
     returnErrorToCaller(res, err, 'Unable to find photos')
+    Logger.error('Unable to find photos', erroredPhotos)
   })
 }
 
 function photoMigrationRoutine (filename, dbDocument) {
-  this.createThumbnail(filename).then(resp => {
-    let photoMovePromise = new Promise((resolve, reject) => moveFile.apply({resolve, reject}, [filename, false]))
-    let thumbnailMovePromise = new Promise((resolve, reject) => moveFile.apply({resolve, reject}, [filename, true]))
+  this.customResize(filename, 1200).then(() => {
+    this.minifyImage(filename).then(() => {
+      this.createThumbnail(filename).then(resp => {
+        let photoMovePromise = new Promise((resolve, reject) => moveFile.apply({resolve, reject}, [filename, false]))
+        let minifiedMovePromise = new Promise((resolve, reject) => moveFile.apply({resolve, reject}, ['minified/' + filename, false]))
+        let thumbnailMovePromise = new Promise((resolve, reject) => moveFile.apply({resolve, reject}, [filename, true]))
 
-    Promise.all([photoMovePromise, thumbnailMovePromise]).then(() => {
-      uploadedPhotos.push(filename)
-      dbDocument.enabled = true
-      dbDocument.save(() => {
-        this.resolve()
+        Promise.all([photoMovePromise, minifiedMovePromise, thumbnailMovePromise]).then(() => {
+          uploadedPhotos.push(filename)
+          dbDocument.enabled = true
+          dbDocument.save(() => {
+            this.resolve()
+          })
+        }, (err) => {
+          erroredPhotos.push({
+            filename: filename,
+            error: err
+          })
+          Logger.error(err)
+          this.reject(err)
+        }).catch(err => {
+          erroredPhotos.push({
+            filename: filename,
+            error: err
+          })
+          Logger.error(err)
+          this.reject(err)
+        })
+      }, err => {
+        erroredPhotos.push({
+          filename: filename,
+          error: err,
+          message: 'Unable to create thumbnail'
+        })
+        this.reject(err)
       })
-    }, (err) => {
+    }, err => {
       erroredPhotos.push({
         filename: filename,
-        error: err
+        error: err,
+        message: 'Unable to minify'
       })
-      Logger.error(err)
-      this.reject(err)
-    }).catch(err => {
-      erroredPhotos.push({
-        filename: filename,
-        error: err
-      })
-      Logger.error(err)
       this.reject(err)
     })
   }, err => {
     erroredPhotos.push({
       filename: filename,
       error: err,
-      message: 'Unable to create thumbnail'
+      message: 'Unable to resize image'
     })
     this.reject(err)
   })

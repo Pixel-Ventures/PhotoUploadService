@@ -2,14 +2,16 @@
 * @Author: Craig Bojko
 * @Date:   2017-01-30 13:11:31
 * @Last Modified by:   Craig Bojko
-* @Last Modified time: 2017-10-15 00:47:08
+* @Last Modified time: 2017-12-14 11:48:33
 */
 
 // import useragent from 'useragent'
 import Thumbnail from '../../modules/Thumbnail.module'
+import ImageMinify from '../../modules/ImageMinify.module'
 import Logger from '../../modules/Logger.module'
 
 const thumbnail = new Thumbnail()
+const minify = new ImageMinify()
 
 export default class API {
   /**
@@ -40,5 +42,18 @@ export default class API {
    */
   createThumbnail (filename) {
     return thumbnail.createThumbnail(filename)
+  }
+
+  /**
+   * Calls minify in module
+   * @param  {[string]} filename [filename of file]
+   * @return {[Promise]}          [promise object]
+   */
+  minifyImage (filename) {
+    return minify.minifyImage(filename)
+  }
+
+  customResize (filename, width) {
+    return thumbnail.customResize(filename, width)
   }
 }
